@@ -194,12 +194,14 @@ void drawBox(int x1,int y1,int x2,int y2,uint16_t cc)
 }
 void drawLine(int x1, int y1, int x2, int y2,uint16_t cc) 
 {
+  cc = getBrightColor(cc);
   int dx = abs(x2-x1), sx = x1<x2 ? 1 : -1;
   int dy = abs(y2-y1), sy = y1<y2 ? 1 : -1;
   int err = (dx>dy ? dx : -dy)/2, e2;
   while(1)
   {
-     drawPixel(x1,y1,cc);
+     if (x1 < 0 || x1 >= screenWidth || y1 < 0 || y1 >= screenHeight) {break;}
+     draw_buff[x1 + y1 * screenWidth] = cc;
      if (x1==x2 && y1==y2) break;
      e2 = err;
      if (e2 >-dx) { err -= dy; x1 += sx; }
@@ -365,73 +367,13 @@ void dmaInit(void)
 }
 void dmaSend(uint8_t *data, uint32_t length)
 {
-    // DMAが終わるまで待つ（ダブルバッファなら不要な場合あり）
-    dma_channel_wait_for_finish_blocking(spi_dma_chan);
+
     // 読み元と転送数を設定
     dma_channel_set_read_addr(spi_dma_chan, data, false);
     dma_channel_set_trans_count(spi_dma_chan, length, true);
 }
-void sendScreen(void )
+void sendTftInitDat()
 {
-  gpio_put(DC,0); 
-  tftSetpos(0,0,screenWidth,screenHeight);
-  
-  gpio_put(DC,0);
-  tftByte(0x2C);
-  gpio_put(DC,1);
-  
-  for (int i = 0;i < screenWidth * screenHeight;i ++)
-  {
-    tftbits[i * 2] = draw_buff[i] >> 8;
-    tftbits[i * 2 + 1] = draw_buff[i] & 0x00FF;
-  }
-  //spi_write_blocking(SPI_PORT, tftbits, screenWidth * screenHeight * 2);
-  dmaSend(tftbits, screenWidth * screenHeight * 2);
-}
-void tftScreenSettings(bool inversX,bool inversY,bool swapColor)
-{
-  //画面設定
-  gpio_put(DC,0);
-  tftByte(0x36);
-  gpio_put(DC,1);
-  uint8_t setting = 0b00110000;
-  if (inversX)
-  {
-    setting |= 0b01000000;
-  }
-  if (inversY)
-  {
-    setting |= 0b10000000;
-  }
-  if (swapColor)
-  {
-    setting |= 0b00000100;
-  }
-  tftByte(setting);
-  gpio_put(DC,0);
-}
-void tftInit(uint8_t width, uint8_t height,uint64_t freq)
-{
-    screenWidth = width;
-    screenHeight = height;
-    colorR = 255;
-    colorG = 255;
-    colorB = 255;
-    draw_buff = (uint16_t*)malloc(screenWidth * screenHeight * sizeof(uint16_t));
-    tftbits = (uint8_t*)malloc(screenWidth * screenHeight * 2);
-    //spi_init(SPI_PORT, 62500000);  //周波数フルスロットル!
-    spi_init(SPI_PORT, freq);  //周波数オーバークロック!
-    dmaInit();
-    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_SCK,  GPIO_FUNC_SPI);
-    gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
-
-    gpio_init(RST);
-    gpio_init(DC);
-
-    gpio_set_dir(RST, GPIO_OUT);
-    gpio_set_dir(DC, GPIO_OUT);
-
       gpio_put(RST,1);
   sleep_ms(300);
   gpio_put(RST,0);
@@ -513,6 +455,71 @@ void tftInit(uint8_t width, uint8_t height,uint64_t freq)
   tftCommand(0x29);  //画面オン
 
   sleep_ms(100);
+}
+void sendScreen(void )
+{
+  // DMAが終わるまで待つ（ダブルバッファなら不要な場合あり）
+  dma_channel_wait_for_finish_blocking(spi_dma_chan);
+  gpio_put(DC,0); 
+  tftSetpos(0,0,screenWidth,screenHeight); 
+  gpio_put(DC,0);
+  tftByte(0x2C);
+  gpio_put(DC,1);
+  
+  for (int i = 0;i < screenWidth * screenHeight;i ++)
+  {
+    tftbits[i * 2] = draw_buff[i] >> 8;
+    tftbits[i * 2 + 1] = draw_buff[i] & 0x00FF;
+  }
+  //spi_write_blocking(SPI_PORT, tftbits, screenWidth * screenHeight * 2);
+  dmaSend(tftbits, screenWidth * screenHeight * 2);
+}
+void tftScreenSettings(bool inversX,bool inversY,bool swapColor)
+{
+  //画面設定
+  gpio_put(DC,0);
+  tftByte(0x36);
+  gpio_put(DC,1);
+  uint8_t setting = 0b00110000;
+  if (inversX)
+  {
+    setting |= 0b01000000;
+  }
+  if (inversY)
+  {
+    setting |= 0b10000000;
+  }
+  if (swapColor)
+  {
+    setting |= 0b00000100;
+  }
+  tftByte(setting);
+  gpio_put(DC,0);
+}
+
+void tftInit(uint8_t width, uint8_t height,uint64_t freq)
+{
+    screenWidth = width;
+    screenHeight = height;
+    colorR = 255;
+    colorG = 255;
+    colorB = 255;
+    draw_buff = (uint16_t*)malloc(screenWidth * screenHeight * sizeof(uint16_t));
+    tftbits = (uint8_t*)malloc(screenWidth * screenHeight * 2);
+    //spi_init(SPI_PORT, 62500000);  //周波数フルスロットル!
+    spi_init(SPI_PORT, freq);  //周波数オーバークロック!
+    dmaInit();
+    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
+    gpio_set_function(PIN_SCK,  GPIO_FUNC_SPI);
+    gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
+
+    gpio_init(RST);
+    gpio_init(DC);
+
+    gpio_set_dir(RST, GPIO_OUT);
+    gpio_set_dir(DC, GPIO_OUT);
+
+  sendTftInitDat();
 }
 #define MASTER_CLOCK_FREQ 166000000
 

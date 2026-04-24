@@ -47,9 +47,9 @@
     void drawPixel(int dx,int dy,uint16_t cc);
     void drawBox(int x1,int y1,int x2,int y2,uint16_t cc);
     void drawFillBox(int x1,int y1,int x2,int y2,uint16_t cc);
+    void drawLine(int x1, int y1, int x2, int y2,uint16_t cc);
     void drawString(int dx,int dy,uint16_t cc,const char str[]);
     void drawNumber(int dx, int dy, uint16_t cc,int deg);
-    void drawLine(int x1, int y1, int x2, int y2,uint16_t cc);
     //色関連
     void setBright(int r,int g,int b);
     uint16_t convert16bitColor(int r,int g,int b);
@@ -87,9 +87,10 @@
     設定画面に入れる
     2026/03/06 v2.1 変更点
     外部から直接スクリーンバッファにアクセス可能
-    2026/04/05 v2.1.1 変更点
+    2026/04/05 v2.2 変更点
     ブートローダーにジャンプする機能を追加
-    2026/04/08 v2.1.2 変更点
+    2026/04/25 v2.2.1 変更点
+    線を描画する関数を追加
     細かな修正
     ---
 */
