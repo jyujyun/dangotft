@@ -126,8 +126,8 @@ void drawBitmapFast(const uint16_t bmp[],int cx,int cy,uint16_t px,uint16_t py,u
   if (cx + pw >= screenWidth)
   {
     if (cx >= screenWidth) {return;}
-    pw -= (cx + pw) - screenWidth + 1;
-    cx = screenWidth - pw - 1;
+    pw -= (cx + pw) - screenWidth;
+    cx = screenWidth - pw;
   }
   //Y切り取り
   if (cy < 0)
@@ -139,8 +139,8 @@ void drawBitmapFast(const uint16_t bmp[],int cx,int cy,uint16_t px,uint16_t py,u
   if (cy + ph >= screenHeight)
   {
     if (cy >= screenHeight) {return;}
-    ph -= (cy + ph) - screenHeight + 1;
-    cy = screenHeight - ph - 1;
+    ph -= (cy + ph) - screenHeight;
+    cy = screenHeight - ph;
   }  
   for (int j = 0;j < ph;j ++)
   {
@@ -226,8 +226,10 @@ void drawLine(int x1, int y1, int x2, int y2,uint16_t cc)
   int err = (dx>dy ? dx : -dy)/2, e2;
   while(1)
   {
-     if (x1 < 0 || x1 >= screenWidth || y1 < 0 || y1 >= screenHeight) {break;}
-     draw_buff[x1 + y1 * screenWidth] = cc;
+     if (x1 >= 0 && x1 < screenWidth && y1 >= 0 && y1 < screenHeight) 
+     {
+      draw_buff[x1 + y1 * screenWidth] = cc;
+     }
      if (x1==x2 && y1==y2) break;
      e2 = err;
      if (e2 >-dx) { err -= dy; x1 += sx; }
