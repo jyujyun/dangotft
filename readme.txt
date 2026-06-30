@@ -67,9 +67,7 @@ void drawBitmap(bmp,x,y,startX,startY,width,height,imageWidth,imageHeight)
 上の関数と同じですあが、setBrightの効果を受けません。
 
 void drawBitmapFast(bmp,x,y,startX,startY,width,height,imageWidth,imageHeight)
-上の関数と同じですが、制約が多い代わりに高速で描画ができます。
-透明色の描画不可、範囲外の描画不可(画面の範囲から画像がはみ出すとアウト)
-今後改善予定です。
+上の関数と同じですが、透明色が使用できません。その代わり高速に描画することができます。
 
 -その他関数
 void setBright(r,g,b)
