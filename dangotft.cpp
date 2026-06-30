@@ -114,8 +114,34 @@ uint16_t getBrightColor(uint16_t cc)
 //px,py:画像の切り出し開始座標
 //pw,ph:切り出しサイズ
 //cw,ch:画像全体サイズ
-void drawBitmapFast(const uint16_t  bmp[],int cx,int cy,uint16_t px,uint16_t py,uint16_t pw,uint16_t ph,uint16_t cw,uint16_t ch)
+void drawBitmapFast(const uint16_t bmp[],int cx,int cy,uint16_t px,uint16_t py,uint16_t pw,uint16_t ph,uint16_t cw,uint16_t ch)
 {
+  //X切り取り
+  if (cx < 0)
+  {
+    if (pw + cx < 0) {return;}
+    px -= cx; pw += cx;
+    cx = 0;
+  }
+  if (cx + pw >= screenWidth)
+  {
+    if (cx >= screenWidth) {return;}
+    pw -= (cx + pw) - screenWidth + 1;
+    cx = screenWidth - pw - 1;
+  }
+  //Y切り取り
+  if (cy < 0)
+  {
+    if (ph + cy < 0) {return;}
+    py -= cy; ph += cy;
+    cy = 0;
+  }
+  if (cy + ph >= screenHeight)
+  {
+    if (cy >= screenHeight) {return;}
+    ph -= (cy + ph) - screenHeight + 1;
+    cy = screenHeight - ph - 1;
+  }  
   for (int j = 0;j < ph;j ++)
   {
       memcpy(&draw_buff[cx + ((j + cy) * screenWidth)],&bmp[px + ((py + j) * cw)],pw * 2);
